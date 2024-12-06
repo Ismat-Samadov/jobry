@@ -141,11 +141,4 @@ We love contributions! Follow these steps:
 - [Prisma](https://prisma.io) for database management
 - [Vercel](https://vercel.com) for hosting
 
-## 📬 Contact
-
-
-Project Link: [https://github.com/ismat-samadov/jobry](https://github.com/Ismat-Samadov/jobry)
-
----
-
 Made with ❤️ by [Ismat Samadov](https://www.linkedin.com/in/ismatsamadov/)
