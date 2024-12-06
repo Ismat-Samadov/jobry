@@ -1,0 +1,23 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model jobs_jobpost {
+  id         Int      @id @default(autoincrement())
+  title      String
+  company    String
+  apply_link String
+  created_at DateTime @default(now())
+}
+
+model search_logs {
+  id        Int      @id @default(autoincrement())
+  query     String
+  timestamp DateTime @default(now())
+}
