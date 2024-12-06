@@ -1,11 +1,15 @@
-
 // src/app/page.tsx
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
 import { Input } from "@/components/ui/input"
-import { Card, CardHeader, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { useDebounce } from '@/lib/hooks/useDebounce'
 
 interface Job {
@@ -16,22 +20,24 @@ interface Job {
   created_at: string
 }
 
+interface JobsMetadata {
+  latestScrapeDate: string
+  totalJobs: number
+  currentPage: number
+  totalPages: number
+}
+
 interface JobsResponse {
   jobs: Job[]
-  metadata: {
-    latestScrapeDate: string
-    totalJobs: number
-    currentPage: number
-    totalPages: number
-  }
+  metadata: JobsMetadata
 }
 
 export default function Home() {
   const [jobsData, setJobsData] = useState<JobsResponse | null>(null)
-  const [search, setSearch] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [page, setPage] = useState(1)
-  const debouncedSearch = useDebounce(search, 500)
+  const [search, setSearch] = useState<string>('')
+  const [loading, setLoading] = useState<boolean>(false)
+  const [page, setPage] = useState<number>(1)
+  const debouncedSearch = useDebounce<string>(search, 500)
 
   const fetchJobs = useCallback(async () => {
     setLoading(true)
@@ -39,12 +45,13 @@ export default function Home() {
       const response = await fetch(
         `/api/jobs?search=${debouncedSearch}&page=${page}`
       )
-      const data = await response.json()
+      const data: JobsResponse = await response.json()
       setJobsData(data)
     } catch (error) {
       console.error('Error fetching jobs:', error)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }, [debouncedSearch, page])
 
   useEffect(() => {
@@ -56,21 +63,30 @@ export default function Home() {
     setPage(1)
   }
 
+  const handlePreviousPage = () => {
+    setPage((p) => Math.max(1, p - 1))
+  }
+
+  const handleNextPage = () => {
+    setPage((p) => p + 1)
+  }
 
   return (
-    <main className="min-h-screen p-8">
+    <main className="min-h-screen p-8 bg-gray-50">
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="space-y-4">
           <h1 className="text-4xl font-bold text-center">Jobry</h1>
-          <Input
-            type="search"
-            placeholder="Search jobs or companies..."
-            value={search}
-            onChange={handleSearch}
-            className="w-full max-w-xl mx-auto"
-          />
+          <div className="w-full max-w-xl mx-auto">
+            <Input
+              type="search"
+              placeholder="Search jobs or companies..."
+              value={search}
+              onChange={handleSearch}
+              className="w-full"
+            />
+          </div>
           {jobsData?.metadata && (
-            <div className="text-center text-sm text-gray-500">
+            <div className="text-center text-sm text-gray-600">
               <p>Last Updated: {new Date(jobsData.metadata.latestScrapeDate).toLocaleString()}</p>
               <p>Found {jobsData.metadata.totalJobs} unique jobs</p>
             </div>
@@ -83,12 +99,12 @@ export default function Home() {
           ) : !jobsData?.jobs.length ? (
             <p className="text-center">No jobs found</p>
           ) : (
-            jobsData.jobs.map((job) => (
+            jobsData.jobs.map((job: Job) => (
               <Card key={job.id}>
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
-                      <h2 className="text-xl font-semibold">{job.title}</h2>
+                      <CardTitle>{job.title}</CardTitle>
                       <p className="text-sm text-gray-500">{job.company}</p>
                     </div>
                     <Button
@@ -109,10 +125,10 @@ export default function Home() {
           )}
         </div>
 
-        {jobsData?.metadata && (
+        {jobsData?.metadata && jobsData.jobs.length > 0 && (
           <div className="flex justify-center gap-4">
             <Button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              onClick={handlePreviousPage}
               disabled={page === 1 || loading}
             >
               Previous
@@ -121,7 +137,7 @@ export default function Home() {
               Page {page} of {jobsData.metadata.totalPages}
             </span>
             <Button
-              onClick={() => setPage((p) => p + 1)}
+              onClick={handleNextPage}
               disabled={page >= jobsData.metadata.totalPages || loading}
             >
               Next
