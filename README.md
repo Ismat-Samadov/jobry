@@ -41,7 +41,7 @@ PostgreSQL >= 13
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/your-username/jobry.git
+git clone https://github.com/ismat-samadov/jobry.git
 cd jobry
 ```
 
