@@ -4,29 +4,31 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-// Helper function to safely convert BigInt to Number
-function formatBigInt(value: unknown) {
+// Define types for database results
+interface DbResult {
+  id: number | bigint
+  title: string
+  company: string
+  apply_link: string
+  created_at: Date
+  [key: string]: unknown
+}
+
+function formatBigInt(value: unknown): unknown {
   if (typeof value === 'bigint') {
     return Number(value)
   }
   return value
 }
 
-// Helper function to process database results
-function processDbResult(result: any) {
-  if (Array.isArray(result)) {
-    return result.map(item => {
-      if (typeof item === 'object' && item !== null) {
-        const processed: any = {}
-        for (const [key, value] of Object.entries(item)) {
-          processed[key] = formatBigInt(value)
-        }
-        return processed
-      }
-      return formatBigInt(item)
-    })
-  }
-  return result
+function processDbResult(result: DbResult[]): DbResult[] {
+  return result.map(item => {
+    const processed: DbResult = { ...item }
+    for (const [key, value] of Object.entries(item)) {
+      processed[key] = formatBigInt(value)
+    }
+    return processed
+  })
 }
 
 export async function GET(request: Request) {
@@ -36,8 +38,7 @@ export async function GET(request: Request) {
   const pageSize = 10
 
   try {
-    // Get unique jobs with latest created_at for each title-company combination
-    const uniqueJobs = await prisma.$queryRaw`
+    const uniqueJobs = await prisma.$queryRaw<DbResult[]>`
       WITH RankedJobs AS (
         SELECT 
           id,
@@ -62,15 +63,13 @@ export async function GET(request: Request) {
       OFFSET ${(page - 1) * pageSize}
     `
 
-    // Get the latest scrape date
     const latestScrapeDate = await prisma.jobs_jobpost.aggregate({
       _max: {
         created_at: true
       }
     })
 
-    // Get total count of unique jobs for pagination
-    const totalUniqueJobs = await prisma.$queryRaw`
+    const totalUniqueJobs = await prisma.$queryRaw<[{ count: number }]>`
       SELECT COUNT(DISTINCT (LOWER(title), LOWER(company)))::integer as count
       FROM jobs_jobpost
       WHERE 
@@ -78,7 +77,6 @@ export async function GET(request: Request) {
         LOWER(company) LIKE ${`%${search.toLowerCase()}%`}
     `
 
-    // Log the search query
     if (search) {
       await prisma.search_logs.create({
         data: {
@@ -88,9 +86,8 @@ export async function GET(request: Request) {
       })
     }
 
-    // Process the results to handle BigInt values
     const processedJobs = processDbResult(uniqueJobs)
-    const totalCount = Number(totalUniqueJobs[0].count)
+    const totalCount = totalUniqueJobs[0].count
 
     return NextResponse.json({
       jobs: processedJobs,

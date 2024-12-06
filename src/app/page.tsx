@@ -1,7 +1,8 @@
+
 // src/app/page.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -32,7 +33,7 @@ export default function Home() {
   const [page, setPage] = useState(1)
   const debouncedSearch = useDebounce(search, 500)
 
-  const fetchJobs = async () => {
+  const fetchJobs = useCallback(async () => {
     setLoading(true)
     try {
       const response = await fetch(
@@ -44,16 +45,17 @@ export default function Home() {
       console.error('Error fetching jobs:', error)
     }
     setLoading(false)
-  }
+  }, [debouncedSearch, page])
 
   useEffect(() => {
     fetchJobs()
-  }, [debouncedSearch, page])
+  }, [fetchJobs])
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(event.target.value)
     setPage(1)
   }
+
 
   return (
     <main className="min-h-screen p-8">
