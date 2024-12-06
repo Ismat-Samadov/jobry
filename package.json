@@ -7,8 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit",
-    "check-all": "npm run type-check && npm run lint"
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@prisma/client": "^5.10.2",
