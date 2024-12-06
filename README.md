@@ -2,8 +2,6 @@
 
 Jobry is a modern, high-performance job board that aggregates positions from over 50 different sources, making job hunting simpler and more efficient. Built with Next.js and powered by real-time data scraping, it brings you the latest opportunities in one sleek interface.
 
-![Jobry Interface](https://your-image-url-here.png)
-
 ## ✨ Features
 
 ### 🔍 Smart Search
