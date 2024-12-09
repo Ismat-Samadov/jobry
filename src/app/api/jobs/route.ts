@@ -52,8 +52,9 @@ export async function GET(request: Request) {
           ) as rn
         FROM jobs_jobpost
         WHERE 
-          LOWER(title) LIKE ${`%${search.toLowerCase()}%`} OR 
-          LOWER(company) LIKE ${`%${search.toLowerCase()}%`}
+          (LOWER(title) LIKE ${`%${search.toLowerCase()}%`} OR 
+          LOWER(company) LIKE ${`%${search.toLowerCase()}%`})
+          AND created_at = (SELECT MAX(created_at) FROM jobs_jobpost)
       )
       SELECT *
       FROM RankedJobs
@@ -73,8 +74,9 @@ export async function GET(request: Request) {
       SELECT COUNT(DISTINCT (LOWER(title), LOWER(company)))::integer as count
       FROM jobs_jobpost
       WHERE 
-        LOWER(title) LIKE ${`%${search.toLowerCase()}%`} OR 
-        LOWER(company) LIKE ${`%${search.toLowerCase()}%`}
+        (LOWER(title) LIKE ${`%${search.toLowerCase()}%`} OR 
+        LOWER(company) LIKE ${`%${search.toLowerCase()}%`})
+        AND created_at = (SELECT MAX(created_at) FROM jobs_jobpost)
     `
 
     if (search) {
